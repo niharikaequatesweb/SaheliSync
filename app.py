@@ -3,11 +3,14 @@ from omnidimension import Client
 from datetime import datetime
 import json
 import os
-import config  # Your new config file
+import traceback
+import config  # Make sure you have config.py with API keys
+from flask_cors import CORS
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
+CORS(app)  # Optional for cross-origin support
 
-# Omnidimension client setup using value from config
+# Omnidimension client setup using API key from config
 client = Client(config.OMNIDIM_API_KEY)
 
 @app.context_processor
@@ -20,6 +23,10 @@ def inject_widget_config():
 @app.route('/')
 def index():
     return render_template("index.html")
+
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok", "message": "SaheliSync is running."})
 
 @app.route('/create-agent', methods=['POST'])
 def create_agent():
@@ -73,6 +80,7 @@ def create_agent():
         )
         return jsonify({"status": "success", "agent_id": response.get("id")})
     except Exception as e:
+        traceback.print_exc()
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/initiate-call', methods=['POST'])
@@ -84,12 +92,15 @@ def initiate_call():
         result = client.call.create(agent_id=agent_id, phone_number=phone, call_type="Outgoing")
         return jsonify({"status": "success", "details": result})
     except Exception as e:
+        traceback.print_exc()
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/omnidim-callback', methods=['POST'])
 def omnidim_callback():
     try:
         data = request.get_json(force=True)
+        print("[Callback received]", json.dumps(data, indent=2))  # Debug log
+
         ex = data.get("extracted_variables", {})
 
         processed = {
@@ -124,14 +135,14 @@ def omnidim_callback():
             "timestamp": datetime.now().isoformat()
         }
 
-        # Save JSON to file
-        os.makedirs("data", exist_ok=True)
-        filename = f"data/user_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        with open(filename, "w") as f:
+        # ✅ Save to 'data.json' in root folder and overwrite on each call
+        filepath = os.path.join(os.getcwd(), "data.json")
+        with open(filepath, "w") as f:
             json.dump(processed, f, indent=2)
 
-        return jsonify({"status": "received", "filename": filename})
+        return jsonify({"status": "received", "file": "data.json"})
     except Exception as e:
+        traceback.print_exc()
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':

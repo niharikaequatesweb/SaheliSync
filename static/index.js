@@ -1,5 +1,6 @@
 let currentMode = 'voice-chat';
 let isRecording = false;
+let recognition = null;
 let synthesis = window.speechSynthesis;
 let currentStep = 0;
 let userProfile = {};
@@ -13,7 +14,44 @@ const conversationFlow = [
     "Perfect! Let me find some matches for you... 🔍"
 ];
 
-// --- SPEAK ---
+// Initialize speech recognition
+function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        alert("Speech recognition not supported in your browser.");
+        return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-IN';
+
+    recognition.onstart = () => {
+        isRecording = true;
+        document.getElementById('mic-btn').classList.add('recording');
+        showStatus('🎙 Listening...', 'listening');
+    };
+
+    recognition.onend = () => {
+        isRecording = false;
+        document.getElementById('mic-btn').classList.remove('recording');
+        hideStatus();
+    };
+
+    recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        hideStatus();
+    };
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        addMessage(transcript, 'user');
+        processUserInput(transcript);
+    };
+}
+
+// Text-to-speech
 function speak(text) {
     if (currentMode === 'chat-chat') return;
 
@@ -28,14 +66,21 @@ function speak(text) {
     synthesis.speak(utterance);
 }
 
-// --- MODE TOGGLE ---
 function setMode(mode) {
     currentMode = mode;
     document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(mode + '-btn').classList.add('active');
 }
 
-// --- MESSAGE HANDLING ---
+function toggleVoiceRecording() {
+    if (!recognition) {
+        alert('Speech recognition not supported in your browser.');
+        return;
+    }
+
+    isRecording ? recognition.stop() : recognition.start();
+}
+
 function addMessage(text, sender) {
     const messagesContainer = document.getElementById('chat-messages');
     const messageDiv = document.createElement('div');
@@ -90,7 +135,6 @@ function handleKeyPress(event) {
     if (event.key === 'Enter') sendMessage();
 }
 
-// --- STATUS FEEDBACK ---
 function showStatus(message, type) {
     const indicator = document.getElementById('status-indicator');
     indicator.textContent = message;
@@ -102,7 +146,6 @@ function hideStatus() {
     document.getElementById('status-indicator').classList.add('hidden');
 }
 
-// --- MATCHING RESULTS ---
 function showMatchingResults() {
     const resultsSection = document.getElementById('results-section');
     const resultsContainer = document.getElementById('results-container');
@@ -174,26 +217,23 @@ function submitPhoneNumber() {
     if (number) {
         alert("Thank you! We'll notify you when we find a match.");
         console.log('Phone submitted:', number);
-        // Optional: send to backend
+        // You can send this to backend via fetch
     }
 }
 
-// --- SCROLL CONTROL ---
 function scrollToChat() {
     document.getElementById('chat-section').scrollIntoView({ behavior: 'smooth' });
 }
 
 function startVoiceChat() {
     scrollToChat();
-    if (window.OmnidimWidget && typeof window.OmnidimWidget.open === 'function') {
-        window.OmnidimWidget.open(); // Use the external voice agent
-    } else {
-        console.warn("Voice widget not ready or unsupported.");
-    }
+    setTimeout(() => {
+        if (recognition) recognition.start();
+    }, 1000);
 }
 
-// --- ON LOAD ---
 document.addEventListener('DOMContentLoaded', function () {
+    initSpeechRecognition();
     setTimeout(() => {
         const welcome = conversationFlow[0];
         addMessage(welcome, 'saheli');
