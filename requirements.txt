@@ -12,3 +12,4 @@ omnidimension==0.2.11
 flask
 gunicorn
 omnidimension
+flask-cors
