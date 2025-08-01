@@ -10,4 +10,4 @@ VOICE_WIDGET_SCRIPT_ID = "omnidimension-web-widget"
 VOICE_WIDGET_SCRIPT_BASE = "https://backend.omnidim.io/web_widget.js"
 
 TOKEN='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'
-GIST_TOKEN ='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'
+GIST_TOKEN ='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'
