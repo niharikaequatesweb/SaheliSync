@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SaheliSync Voice Agent</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>SaheliSync Roommate Voice Agent</h1>
+    <p>Click the microphone icon to speak with the AI voice agent.</p>
+  </div>
+
+  <!-- Voice widget injected dynamically -->
+  <script
+    id="{{ voice_widget_script_id }}"
+    async
+    src="{{ voice_widget_script_src }}">
+  </script>
+
+  <script src="{{ url_for('static', filename='index.js') }}"></script>
+</body>
+</html>
