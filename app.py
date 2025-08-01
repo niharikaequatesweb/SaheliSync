@@ -3,12 +3,19 @@ from omnidimension import Client
 from datetime import datetime
 import json
 import os
+import config  # Your new config file
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
-# Omnidimension client setup
-OMNIDIM_API_KEY = 'ASyEXtdTuHuc5bhGLlwEmteCM3xQ5xnkavicb5_bCao'
-client = Client(OMNIDIM_API_KEY)
+# Omnidimension client setup using value from config
+client = Client(config.OMNIDIM_API_KEY)
+
+@app.context_processor
+def inject_widget_config():
+    return dict(
+        voice_widget_script_id=config.VOICE_WIDGET_SCRIPT_ID,
+        voice_widget_script_src=f"{config.VOICE_WIDGET_SCRIPT_BASE}?secret_key={config.VOICE_WIDGET_SECRET}"
+    )
 
 @app.route('/')
 def index():
@@ -82,7 +89,7 @@ def initiate_call():
 @app.route('/omnidim-callback', methods=['POST'])
 def omnidim_callback():
     try:
-        data = request.json
+        data = request.get_json(force=True)
         ex = data.get("extracted_variables", {})
 
         processed = {
@@ -117,7 +124,7 @@ def omnidim_callback():
             "timestamp": datetime.now().isoformat()
         }
 
-        # Save to file in `data/` directory
+        # Save JSON to file
         os.makedirs("data", exist_ok=True)
         filename = f"data/user_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         with open(filename, "w") as f:
@@ -127,7 +134,6 @@ def omnidim_callback():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# Only for local dev
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=True, port=port)

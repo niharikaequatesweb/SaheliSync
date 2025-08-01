@@ -41,15 +41,11 @@
         <div class="chat-messages" id="chat-messages">
           <div class="message saheli">
             <div class="message-bubble">
-              Hi there! I'm Saheli, your AI roommate matching assistant. What's your name? 😊
+              Hi there! I'm Saheli, your AI roommate matching assistant. Just click "Talk to Saheli" to begin. 😊
             </div>
           </div>
         </div>
-
-        <div class="chat-input-container">
-          <input type="text" class="chat-input" id="chat-input" placeholder="Type your message..." onkeypress="handleKeyPress(event)" />
-          <button class="send-btn" onclick="sendMessage()">📩</button>
-        </div>
+        <!-- Chat input removed -->
       </div>
     </div>
   </section>
@@ -63,35 +59,40 @@
     </div>
   </section>
 
-  <!-- Voice Agent Script (Omnidimension) -->
-  <script async id="omnidimension-web-widget" src="https://backend.omnidim.io/web_widget.js?secret_key=99a0f197aa77b8aad9ca8f9a237efe4e"></script>
+  <!-- Omnidimension Voice Widget Script -->
+  <script id="omnidimension-web-widget"
+    async
+    src="https://backend.omnidim.io/web_widget.js?secret_key=99a0f197aa77b8aad9ca8f9a237efe4e">
+  </script>
 
   <!-- App Logic -->
   <script src="{{ url_for('static', filename='index.js') }}"></script>
 
-  <!-- Interaction Logic -->
+  <!-- Interaction Functions -->
   <script>
     function scrollToChat() {
       document.getElementById('chat-section').scrollIntoView({ behavior: 'smooth' });
     }
 
     function launchVoiceAgent() {
-      scrollToChat();
       if (window.OmnidimWidget && typeof window.OmnidimWidget.open === 'function') {
-        window.OmnidimWidget.open(); // Programmatically open voice widget if supported
+        window.OmnidimWidget.open();
       } else {
-        console.warn("Voice widget is not ready yet.");
+        alert("Voice assistant is still loading. Please try again in a moment.");
       }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      const welcome = "Hi! I'm your AI voice agent. You can speak to me by clicking the microphone below.";
-      const chatBox = document.getElementById('chat-messages');
-      const bubble = document.createElement('div');
-      bubble.className = 'message saheli';
-      bubble.innerHTML = `<div class="message-bubble">${welcome}</div>`;
-      chatBox.appendChild(bubble);
+      setTimeout(() => {
+        const welcome = "Hi! I'm your AI voice agent. You can speak to me by clicking the microphone below.";
+        const chatBox = document.getElementById('chat-messages');
+        const bubble = document.createElement('div');
+        bubble.className = 'message saheli';
+        bubble.innerHTML = `<div class="message-bubble">${welcome}</div>`;
+        chatBox.appendChild(bubble);
+      }, 1000);
     });
   </script>
+
 </body>
 </html>
