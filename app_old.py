@@ -101,12 +101,44 @@ def omnidim_callback():
         data = request.get_json(force=True)
         print("[Callback received]", json.dumps(data, indent=2))
 
-        callrepirt = data.get("call_report", {})
-        
+        ex = data.get("extracted_variables", {})
+
+        processed = {
+            "user_profile": {
+                "cleanliness": {
+                    "rating": ex.get("cleanliness_rating"),
+                    "habits": ex.get("cleanliness_habits")
+                },
+                "sleep_schedule": {
+                    "bedtime": ex.get("bedtime"),
+                    "wake_time": ex.get("wake_time"),
+                    "sleep_type": ex.get("sleep_type")
+                },
+                "social": {
+                    "energy": ex.get("social_energy"),
+                    "guests": ex.get("guests_preference")
+                },
+                "living": {
+                    "room_type": ex.get("room_preference"),
+                    "privacy": ex.get("privacy_importance")
+                },
+                "lifestyle": {
+                    "pets": ex.get("pets"),
+                    "substances": ex.get("substances"),
+                    "dietary": ex.get("dietary"),
+                    "noise": ex.get("noise_tolerance")
+                }
+            },
+            "summary": data.get("summary"),
+            "sentiment": data.get("sentiment"),
+            "full_conversation": data.get("fullConversation"),
+            "timestamp": datetime.now().isoformat()
+        }
+
         # Save to /tmp/data.json on Render (writable)
         filepath = "/tmp/data.json"
         with open(filepath, "w") as f:
-            json.dump(callrepirt, f, indent=2)
+            json.dump(processed, f, indent=2)
         print(f"[Saved callback data to]: {filepath}")
 
         return jsonify({"status": "received", "file": "data.json"})
