@@ -4,13 +4,13 @@ from datetime import datetime
 import json
 import os
 import traceback
-import requests
 import config
 from flask_cors import CORS
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 CORS(app)
 
+# Setup Omnidimension client using config key
 client = Client(config.OMNIDIM_API_KEY)
 
 @app.context_processor
@@ -101,46 +101,18 @@ def omnidim_callback():
         data = request.get_json(force=True)
         print("[Callback received]", json.dumps(data, indent=2))
 
-        call_report = data.get("call_report", {})
+        callrepirt = data.get("call_report", {})
+        
+        # Save to /tmp/data.json on Render (writable)
         filepath = "/tmp/data.json"
-
         with open(filepath, "w") as f:
-            json.dump(call_report, f, indent=2)
-
+            json.dump(callrepirt, f, indent=2)
         print(f"[Saved callback data to]: {filepath}")
-
-        # Upload to GitHub Gist
-        upload_to_gist(call_report)
 
         return jsonify({"status": "received", "file": "data.json"})
     except Exception as e:
         traceback.print_exc()
         return jsonify({"status": "error", "message": str(e)}), 500
-
-def upload_to_gist(data):
-    try:
-        headers = {
-            "Authorization": f"token {config.GIST_TOKEN}",
-            "Accept": "application/vnd.github.v3+json"
-        }
-        payload = {
-            "description": "SaheliSync Voice Call Result",
-            "public": True,
-            "files": {
-                "data.json": {
-                    "content": json.dumps(data, indent=2)
-                }
-            }
-        }
-
-        response = requests.post("https://api.github.com/gists", headers=headers, json=payload)
-        if response.status_code == 201:
-            gist_url = response.json().get("html_url")
-            print(f"[Uploaded to Gist]: {gist_url}")
-        else:
-            print(f"[Gist upload failed]: {response.status_code} - {response.text}")
-    except Exception as e:
-        print(f"[Gist upload error]: {e}")
 
 @app.route('/latest-profile', methods=['GET'])
 def get_latest_profile():
