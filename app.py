@@ -109,7 +109,7 @@ def omnidim_callback():
 
         print(f"[Saved callback data to]: {filepath}")
 
-        # Upload to JSONBin
+        # Upload to JSONBin instead of Gist
         upload_to_jsonbin(call_report)
 
         return jsonify({"status": "received", "file": "data.json"})
@@ -131,7 +131,8 @@ def upload_to_jsonbin(data):
             }
         }
 
-        response = requests.post("https://api.jsonbin.io/v3/bins", headers=headers, json=payload)
+        # ✅ Corrected JSONBin endpoint
+        response = requests.post("https://api.jsonbin.io/v3/b", headers=headers, json=payload)
 
         if response.status_code in [200, 201]:
             bin_id = response.json().get("metadata", {}).get("id")
