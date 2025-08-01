@@ -60,11 +60,11 @@
   </section>
 
   <!-- Omnidimension Voice Widget Script -->
-  <script id="omnidimension-web-widget"
-    async
-    src="https://backend.omnidim.io/web_widget.js?secret_key=99a0f197aa77b8aad9ca8f9a237efe4e">
+  <script id="{{ voice_widget_script_id }}"
+  async
+  src="{{ voice_widget_script_src }}">
   </script>
-
+  
   <!-- App Logic -->
   <script src="{{ url_for('static', filename='index.js') }}"></script>
 
