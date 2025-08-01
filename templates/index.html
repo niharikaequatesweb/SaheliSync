@@ -64,33 +64,33 @@
   </section>
 
   <!-- Voice Agent Script (Omnidimension) -->
-  <script id="omnidimension-web-widget" async src="https://backend.omnidim.io/web_widget.js?secret_key=99a0f197aa77b8aad9ca8f9a237efe4e"></script>
+  <script async id="omnidimension-web-widget" src="https://backend.omnidim.io/web_widget.js?secret_key=99a0f197aa77b8aad9ca8f9a237efe4e"></script>
 
   <!-- App Logic -->
   <script src="{{ url_for('static', filename='index.js') }}"></script>
 
-  <!-- Optional: Function to scroll to chat -->
+  <!-- Interaction Logic -->
   <script>
     function scrollToChat() {
       document.getElementById('chat-section').scrollIntoView({ behavior: 'smooth' });
     }
 
     function launchVoiceAgent() {
-      // Omnidimension widget auto-displays on load
-      // You can also use: window.OmnidimWidget.open() if supported
       scrollToChat();
+      if (window.OmnidimWidget && typeof window.OmnidimWidget.open === 'function') {
+        window.OmnidimWidget.open(); // Programmatically open voice widget if supported
+      } else {
+        console.warn("Voice widget is not ready yet.");
+      }
     }
 
-    // Optional: greet user on load
     document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        const welcome = "Hi! I'm your AI voice agent. You can speak to me by clicking the microphone below.";
-        const chatBox = document.getElementById('chat-messages');
-        const bubble = document.createElement('div');
-        bubble.className = 'message saheli';
-        bubble.innerHTML = `<div class="message-bubble">${welcome}</div>`;
-        chatBox.appendChild(bubble);
-      }, 1000);
+      const welcome = "Hi! I'm your AI voice agent. You can speak to me by clicking the microphone below.";
+      const chatBox = document.getElementById('chat-messages');
+      const bubble = document.createElement('div');
+      bubble.className = 'message saheli';
+      bubble.innerHTML = `<div class="message-bubble">${welcome}</div>`;
+      chatBox.appendChild(bubble);
     });
   </script>
 </body>
