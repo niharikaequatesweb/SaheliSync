@@ -7,4 +7,4 @@ VOICE_WIDGET_SECRET = os.getenv("VOICE_WIDGET_SECRET", "d71809ab901a0e64cf4529da
 
 # For the <script> tag
 VOICE_WIDGET_SCRIPT_ID = "omnidimension-web-widget"
-VOICE_WIDGET_SCRIPT_BASE = "https://backend.omnidim.io/web_widget.js?secret_key="+VOICE_WIDGET_SECRET
+VOICE_WIDGET_SCRIPT_BASE = "https://backend.omnidim.io/web_widget.js"
