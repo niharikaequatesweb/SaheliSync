@@ -1,23 +1,14 @@
-from flask import Flask, request, jsonify, render_template
 from omnidimension import Client
-from datetime import datetime
 import json
-import os
+from flask import Flask, request, jsonify
+from datetime import datetime
 
-app = Flask(__name__, static_folder='static', template_folder='templates')
+app = Flask(__name__)
 
-# Omnidimension client setup
 api_key = 'ASyEXtdTuHuc5bhGLlwEmteCM3xQ5xnkavicb5_bCao'
 client = Client(api_key)
 
-# Serve UI
-@app.route('/')
-def home():
-    return render_template("index.html")
-
-# Create Agent
-@app.route('/create-agent', methods=['POST'])
-def create_agent():
+def create_roommate_agent():
     try:
         response = client.agent.create(
             name="Roommate Match AI Voice Collector",
@@ -66,49 +57,70 @@ def create_agent():
                 }
             }
         )
-        return jsonify({"status": "success", "agent_id": response.get("id")})
+        return response.get("id")
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        print(f"Agent creation failed: {e}")
+        return None
 
-# Start a call
+def initiate_call(agent_id, phone_number):
+    try:
+        result = client.call.create(
+            agent_id=agent_id,
+            phone_number=phone_number,
+            call_type="Outgoing"
+        )
+        return result
+    except Exception as e:
+        print(f"Call initiation failed: {e}")
+        return None
+
+def process_voice_to_json(data):
+    ex = data.get("extracted_variables", {})
+    return {
+        "user_profile": {
+            "cleanliness": {"rating": ex.get("cleanliness_rating"), "habits": ex.get("cleanliness_habits")},
+            "sleep_schedule": {"bedtime": ex.get("bedtime"), "wake_time": ex.get("wake_time"), "sleep_type": ex.get("sleep_type")},
+            "social": {"energy": ex.get("social_energy"), "guests": ex.get("guests_preference")},
+            "living": {"room_type": ex.get("room_preference"), "privacy": ex.get("privacy_importance")},
+            "lifestyle": {"pets": ex.get("pets"), "substances": ex.get("substances"), "dietary": ex.get("dietary"), "noise": ex.get("noise_tolerance")}
+        },
+        "summary": data.get("summary"),
+        "sentiment": data.get("sentiment"),
+        "full_conversation": data.get("fullConversation"),
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.route('/')
+def root():
+    return jsonify({"status": "SaheliSync is running"})
+
+@app.route('/create-agent', methods=['POST'])
+def create_agent():
+    agent_id = create_roommate_agent()
+    if agent_id:
+        return jsonify({"status": "success", "agent_id": agent_id})
+    else:
+        return jsonify({"status": "error", "message": "Failed to create agent"}), 500
+
 @app.route('/initiate-call', methods=['POST'])
 def call_user():
-    try:
-        data = request.json
-        agent_id = data.get("agent_id")
-        phone = data.get("phone_number")
-        result = client.call.create(agent_id=agent_id, phone_number=phone, call_type="Outgoing")
+    data = request.json
+    agent_id = data.get("agent_id")
+    phone = data.get("phone_number")
+    result = initiate_call(agent_id, phone)
+    if result:
         return jsonify({"status": "success", "details": result})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+    else:
+        return jsonify({"status": "error", "message": "Call initiation failed"}), 500
 
-# Webhook handler
 @app.route('/omnidim-callback', methods=['POST'])
 def webhook():
-    try:
-        data = request.json
-        ex = data.get("extracted_variables", {})
-        processed = {
-            "user_profile": {
-                "cleanliness": {"rating": ex.get("cleanliness_rating"), "habits": ex.get("cleanliness_habits")},
-                "sleep_schedule": {"bedtime": ex.get("bedtime"), "wake_time": ex.get("wake_time"), "sleep_type": ex.get("sleep_type")},
-                "social": {"energy": ex.get("social_energy"), "guests": ex.get("guests_preference")},
-                "living": {"room_type": ex.get("room_preference"), "privacy": ex.get("privacy_importance")},
-                "lifestyle": {"pets": ex.get("pets"), "substances": ex.get("substances"), "dietary": ex.get("dietary"), "noise": ex.get("noise_tolerance")}
-            },
-            "summary": data.get("summary"),
-            "sentiment": data.get("sentiment"),
-            "full_conversation": data.get("fullConversation"),
-            "timestamp": datetime.now().isoformat()
-        }
-        filename = f"user_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        with open(filename, 'w') as f:
-            json.dump(processed, f, indent=2)
-        return jsonify({"status": "received", "filename": filename})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+    data = request.json
+    prefs = process_voice_to_json(data)
+    filename = f"user_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    with open(filename, 'w') as f:
+        json.dump(prefs, f, indent=2)
+    return jsonify({"status": "received", "filename": filename})
 
-# Only for local dev
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(debug=True, port=port)
+    app.run(debug=True, port=5000)
