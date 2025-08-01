@@ -9,3 +9,6 @@ click==8.1.7
 blinker==1.6.3
 gunicorn==21.2.0
 omnidimension==0.2.11
+flask
+gunicorn
+omnidimension
