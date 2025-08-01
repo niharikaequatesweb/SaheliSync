@@ -4,18 +4,16 @@ from datetime import datetime
 import json
 import os
 
-app = Flask(__name__, static_folder='static', template_folder='templates')
+app = Flask(__name__, static_folder="static", template_folder="templates")
 
 # Omnidimension client setup
-api_key = 'ASyEXtdTuHuc5bhGLlwEmteCM3xQ5xnkavicb5_bCao'
-client = Client(api_key)
+OMNIDIM_API_KEY = 'ASyEXtdTuHuc5bhGLlwEmteCM3xQ5xnkavicb5_bCao'
+client = Client(OMNIDIM_API_KEY)
 
-# Serve UI
 @app.route('/')
-def home():
+def index():
     return render_template("index.html")
 
-# Create Agent
 @app.route('/create-agent', methods=['POST'])
 def create_agent():
     try:
@@ -70,9 +68,8 @@ def create_agent():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# Start a call
 @app.route('/initiate-call', methods=['POST'])
-def call_user():
+def initiate_call():
     try:
         data = request.json
         agent_id = data.get("agent_id")
@@ -82,28 +79,50 @@ def call_user():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# Webhook handler
 @app.route('/omnidim-callback', methods=['POST'])
-def webhook():
+def omnidim_callback():
     try:
         data = request.json
         ex = data.get("extracted_variables", {})
+
         processed = {
             "user_profile": {
-                "cleanliness": {"rating": ex.get("cleanliness_rating"), "habits": ex.get("cleanliness_habits")},
-                "sleep_schedule": {"bedtime": ex.get("bedtime"), "wake_time": ex.get("wake_time"), "sleep_type": ex.get("sleep_type")},
-                "social": {"energy": ex.get("social_energy"), "guests": ex.get("guests_preference")},
-                "living": {"room_type": ex.get("room_preference"), "privacy": ex.get("privacy_importance")},
-                "lifestyle": {"pets": ex.get("pets"), "substances": ex.get("substances"), "dietary": ex.get("dietary"), "noise": ex.get("noise_tolerance")}
+                "cleanliness": {
+                    "rating": ex.get("cleanliness_rating"),
+                    "habits": ex.get("cleanliness_habits")
+                },
+                "sleep_schedule": {
+                    "bedtime": ex.get("bedtime"),
+                    "wake_time": ex.get("wake_time"),
+                    "sleep_type": ex.get("sleep_type")
+                },
+                "social": {
+                    "energy": ex.get("social_energy"),
+                    "guests": ex.get("guests_preference")
+                },
+                "living": {
+                    "room_type": ex.get("room_preference"),
+                    "privacy": ex.get("privacy_importance")
+                },
+                "lifestyle": {
+                    "pets": ex.get("pets"),
+                    "substances": ex.get("substances"),
+                    "dietary": ex.get("dietary"),
+                    "noise": ex.get("noise_tolerance")
+                }
             },
             "summary": data.get("summary"),
             "sentiment": data.get("sentiment"),
             "full_conversation": data.get("fullConversation"),
             "timestamp": datetime.now().isoformat()
         }
-        filename = f"user_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        with open(filename, 'w') as f:
+
+        # Save to file in `data/` directory
+        os.makedirs("data", exist_ok=True)
+        filename = f"data/user_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        with open(filename, "w") as f:
             json.dump(processed, f, indent=2)
+
         return jsonify({"status": "received", "filename": filename})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
