@@ -13,7 +13,6 @@ CORS(app)
 
 client = Client(config.OMNIDIM_API_KEY)
 
-
 @app.context_processor
 def inject_widget_config():
     return dict(
@@ -21,16 +20,13 @@ def inject_widget_config():
         voice_widget_script_src=f"{config.VOICE_WIDGET_SCRIPT_BASE}?secret_key={config.VOICE_WIDGET_SECRET}"
     )
 
-
 @app.route('/')
 def index():
     return render_template("index.html")
 
-
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({"status": "ok", "message": "SaheliSync is running."})
-
 
 @app.route('/create-agent', methods=['POST'])
 def create_agent():
@@ -87,7 +83,6 @@ def create_agent():
         traceback.print_exc()
         return jsonify({"status": "error", "message": str(e)}), 500
 
-
 @app.route('/initiate-call', methods=['POST'])
 def initiate_call():
     try:
@@ -99,7 +94,6 @@ def initiate_call():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"status": "error", "message": str(e)}), 500
-
 
 @app.route('/omnidim-callback', methods=['POST'])
 def omnidim_callback():
@@ -115,48 +109,40 @@ def omnidim_callback():
 
         print(f"[Saved callback data to]: {filepath}")
 
-        paste_url = upload_to_pastegg(call_report)
+        # Upload to JSONBin instead of Gist
+        upload_to_jsonbin(call_report)
 
-        return jsonify({
-            "status": "received",
-            "file": "data.json",
-            "paste_url": paste_url
-        })
+        return jsonify({"status": "received", "file": "data.json"})
     except Exception as e:
         traceback.print_exc()
         return jsonify({"status": "error", "message": str(e)}), 500
 
-
-def upload_to_pastegg(data):
+def upload_to_jsonbin(data):
     try:
-        paste_data = {
-            "name": "sahelisync-callback.json",
-            "files": [
-                {
-                    "name": "roommate_preferences.json",
-                    "content": {
-                        "format": "text",
-                        "value": json.dumps(data, indent=2)
-                    }
-                }
-            ],
-            "visibility": "public"
+        headers = {
+            "Content-Type": "application/json",
+            "X-Master-Key": config.JSONBIN_API_KEY
         }
 
-        response = requests.post("https://api.paste.gg/v1/pastes", json=paste_data)
+        payload = {
+            "record": data,
+            "metadata": {
+                "name": "SaheliSync Callback Result"
+            }
+        }
 
-        if response.status_code == 201:
-            paste_id = response.json()["result"]["id"]
-            paste_url = f"https://paste.gg/p/{paste_id}"
-            print(f"[Uploaded to Paste.gg]: {paste_url}")
-            return paste_url
+        # ✅ Corrected JSONBin endpoint
+        response = requests.post("https://api.jsonbin.io/v3/b", headers=headers, json=payload)
+
+        if response.status_code in [200, 201]:
+            bin_id = response.json().get("metadata", {}).get("id")
+            bin_url = f"https://jsonbin.io/v3/b/{bin_id}"
+            print(f"[Uploaded to JSONBin]: {bin_url}")
         else:
-            print(f"[Paste.gg upload failed]: {response.status_code} - {response.text}")
-            return None
-    except Exception as e:
-        print(f"[Paste.gg upload error]: {e}")
-        return None
+            print(f"[JSONBin upload failed]: {response.status_code} - {response.text}")
 
+    except Exception as e:
+        print(f"[JSONBin upload error]: {e}")
 
 @app.route('/latest-profile', methods=['GET'])
 def get_latest_profile():
@@ -167,31 +153,6 @@ def get_latest_profile():
         return jsonify(data)
     else:
         return jsonify({"error": "No profile data found"}), 404
-
-
-@app.route('/download-paste', methods=['GET'])
-def download_paste():
-    paste_url = request.args.get("url")
-    if not paste_url:
-        return jsonify({"error": "Missing 'url' parameter"}), 400
-
-    try:
-        paste_id = paste_url.rstrip("/").split("/")[-1]
-        api_url = f"https://api.paste.gg/v1/pastes/{paste_id}"
-        response = requests.get(api_url)
-
-        if response.status_code != 200:
-            return jsonify({"error": f"Failed to fetch paste.gg content: {response.status_code}"}), 500
-
-        file_content = response.json()["result"]["files"][0]["content"]["value"]
-        filepath = "/tmp/paste_copy.json"
-        with open(filepath, "w") as f:
-            f.write(file_content)
-
-        return jsonify({"status": "success", "file": filepath})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
