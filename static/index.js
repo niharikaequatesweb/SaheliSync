@@ -66,12 +66,6 @@ function speak(text) {
     synthesis.speak(utterance);
 }
 
-function setMode(mode) {
-    currentMode = mode;
-    document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById(mode + '-btn').classList.add('active');
-}
-
 function toggleVoiceRecording() {
     if (!recognition) {
         alert('Speech recognition not supported in your browser.');
@@ -116,23 +110,12 @@ function processUserInput(input) {
             const finalMessage = conversationFlow[currentStep];
             addMessage(finalMessage, 'saheli');
             speak(finalMessage);
-            setTimeout(showMatchingResults, 3000);
+            setTimeout(() => {
+                sendUserDataToBackend(userProfile);
+                showMatchingResults();
+            }, 2000);
         }, 1000);
     }
-}
-
-function sendMessage() {
-    const input = document.getElementById('chat-input');
-    const message = input.value.trim();
-    if (message) {
-        addMessage(message, 'user');
-        processUserInput(message);
-        input.value = '';
-    }
-}
-
-function handleKeyPress(event) {
-    if (event.key === 'Enter') sendMessage();
 }
 
 function showStatus(message, type) {
@@ -146,54 +129,53 @@ function hideStatus() {
     document.getElementById('status-indicator').classList.add('hidden');
 }
 
+function scrollToChat() {
+    document.getElementById('chat-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function startVoiceChat() {
+    scrollToChat();
+    setTimeout(() => {
+        if (recognition) recognition.start();
+    }, 1000);
+}
+
+// Show matches (mocked)
 function showMatchingResults() {
     const resultsSection = document.getElementById('results-section');
     const resultsContainer = document.getElementById('results-container');
-    const hasMatches = Math.random() > 0.3;
 
-    if (hasMatches) {
-        const matches = [
-            { name: 'Priya Sharma', profession: 'Software Engineer', compatibility: '95%', city: 'Bangalore', avatar: '👩‍💻' },
-            { name: 'Ananya Gupta', profession: 'Marketing Manager', compatibility: '88%', city: 'Mumbai', avatar: '👩‍💼' },
-            { name: 'Kavya Reddy', profession: 'Graphic Designer', compatibility: '82%', city: 'Hyderabad', avatar: '👩‍🎨' }
-        ];
+    const matches = [
+        { name: 'Priya Sharma', profession: 'Software Engineer', compatibility: '95%', city: 'Bangalore', avatar: '👩‍💻' },
+        { name: 'Ananya Gupta', profession: 'Marketing Manager', compatibility: '88%', city: 'Mumbai', avatar: '👩‍💼' },
+        { name: 'Kavya Reddy', profession: 'Graphic Designer', compatibility: '82%', city: 'Hyderabad', avatar: '👩‍🎨' }
+    ];
 
-        resultsContainer.innerHTML = `
-            <h2>Great news! We found ${matches.length} perfect matches for you! 🎉</h2>
-            <div class="match-cards">
-                ${matches.map((m, i) => `
-                    <div class="match-card" style="animation-delay: ${i * 0.2}s">
-                        <div class="match-avatar">${m.avatar}</div>
-                        <h3>${m.name}</h3>
-                        <p>${m.profession}</p>
-                        <p>📍 ${m.city}</p>
-                        <div class="compatibility">${m.compatibility} Compatible</div>
-                    </div>`).join('')}
-            </div>
-        `;
+    resultsContainer.innerHTML = `
+        <h2>Great news! We found ${matches.length} perfect matches for you! 🎉</h2>
+        <div class="match-cards">
+            ${matches.map((m, i) => `
+                <div class="match-card" style="animation-delay: ${i * 0.2}s">
+                    <div class="match-avatar">${m.avatar}</div>
+                    <h3>${m.name}</h3>
+                    <p>${m.profession}</p>
+                    <p>📍 ${m.city}</p>
+                    <div class="compatibility">${m.compatibility} Compatible</div>
+                </div>`).join('')}
+        </div>
+    `;
 
-        createConfetti();
+    createConfetti();
 
-        setTimeout(() => {
-            document.querySelectorAll('.match-card').forEach(card => card.classList.add('show'));
-        }, 500);
-    } else {
-        resultsContainer.innerHTML = `
-            <div class="no-match">
-                <h2>We're still looking for your perfect match! 🔍</h2>
-                <p>We'll notify you when we find someone compatible with your preferences.</p>
-                <div class="phone-input">
-                    <input type="tel" placeholder="Enter your phone number" id="phone-number">
-                    <button class="btn btn-primary" onclick="submitPhoneNumber()">Notify Me</button>
-                </div>
-            </div>
-        `;
-    }
+    setTimeout(() => {
+        document.querySelectorAll('.match-card').forEach(card => card.classList.add('show'));
+    }, 500);
 
     resultsSection.style.display = 'block';
     resultsSection.scrollIntoView({ behavior: 'smooth' });
 }
 
+// Optional confetti
 function createConfetti() {
     const confettiContainer = document.createElement('div');
     confettiContainer.className = 'confetti';
@@ -212,24 +194,16 @@ function createConfetti() {
     setTimeout(() => document.body.removeChild(confettiContainer), 3000);
 }
 
-function submitPhoneNumber() {
-    const number = document.getElementById('phone-number').value;
-    if (number) {
-        alert("Thank you! We'll notify you when we find a match.");
-        console.log('Phone submitted:', number);
-        // You can send this to backend via fetch
-    }
-}
-
-function scrollToChat() {
-    document.getElementById('chat-section').scrollIntoView({ behavior: 'smooth' });
-}
-
-function startVoiceChat() {
-    scrollToChat();
-    setTimeout(() => {
-        if (recognition) recognition.start();
-    }, 1000);
+// 📤 POST user profile to backend
+function sendUserDataToBackend(profile) {
+    fetch('/api/save_profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile)
+    })
+    .then(res => res.json())
+    .then(data => console.log("Server response:", data))
+    .catch(err => console.error("Failed to send data:", err));
 }
 
 document.addEventListener('DOMContentLoaded', function () {
