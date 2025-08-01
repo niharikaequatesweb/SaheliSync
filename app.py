@@ -4,13 +4,13 @@ from datetime import datetime
 import json
 import os
 import traceback
-import config  # Make sure you have config.py with API keys
+import config
 from flask_cors import CORS
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
-CORS(app)  # Optional for cross-origin support
+CORS(app)
 
-# Omnidimension client setup using API key from config
+# Setup Omnidimension client using config key
 client = Client(config.OMNIDIM_API_KEY)
 
 @app.context_processor
@@ -99,7 +99,7 @@ def initiate_call():
 def omnidim_callback():
     try:
         data = request.get_json(force=True)
-        print("[Callback received]", json.dumps(data, indent=2))  # Debug log
+        print("[Callback received]", json.dumps(data, indent=2))
 
         ex = data.get("extracted_variables", {})
 
@@ -135,15 +135,26 @@ def omnidim_callback():
             "timestamp": datetime.now().isoformat()
         }
 
-        # ✅ Save to 'data.json' in root folder and overwrite on each call
-        filepath = os.path.join(os.getcwd(), "data.json")
+        # Save to /tmp/data.json on Render (writable)
+        filepath = "/tmp/data.json"
         with open(filepath, "w") as f:
             json.dump(processed, f, indent=2)
+        print(f"[Saved callback data to]: {filepath}")
 
         return jsonify({"status": "received", "file": "data.json"})
     except Exception as e:
         traceback.print_exc()
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/latest-profile', methods=['GET'])
+def get_latest_profile():
+    filepath = "/tmp/data.json"
+    if os.path.exists(filepath):
+        with open(filepath, "r") as f:
+            data = json.load(f)
+        return jsonify(data)
+    else:
+        return jsonify({"error": "No profile data found"}), 404
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
