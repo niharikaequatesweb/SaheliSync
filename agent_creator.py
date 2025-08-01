@@ -1,11 +1,13 @@
 from omnidimension import Client
 import json
 from flask import Flask, request, jsonify
+from datetime import datetime
 
+# Initialize Flask app
+app = Flask(__name__)
 
 api_key='ASyEXtdTuHuc5bhGLlwEmteCM3xQ5xnkavicb5_bCao'
 client = Client(api_key)
-
 
 def create_roommate_agent():
     try:
@@ -76,7 +78,7 @@ def create_roommate_agent():
             post_call_actions={
                 "webhook": {
                     "enabled": True,
-                    "url": "https://your-ngrok-url.ngrok.io/omnidim-callback",  # Update this with your ngrok URL
+                    "url": "https://2qscczmd-5000.githubpreview.dev/omnidim-callback",
                     "include": ["summary", "fullConversation", "sentiment", "extracted_variables"],
                     "extracted_variables": [
                         {"key": "cleanliness_rating", "prompt": "Extract the cleanliness rating (1-10) from user's response."},
@@ -100,7 +102,6 @@ def create_roommate_agent():
         print("Agent created successfully!")
         print(f"Full response: {response}")
 
-        # Try to extract agent ID from different possible response formats
         agent_id = None
         if isinstance(response, dict):
             agent_id = response.get('id') or response.get('agent_id') or response.get('data', {}).get('id')
@@ -115,13 +116,6 @@ def create_roommate_agent():
     except Exception as e:
         print(f"Error creating agent: {e}")
         return None
-
-# Step 2: Webhook Server (webhook_server.py)
-from flask import Flask, request, jsonify
-import json
-from datetime import datetime
-
-app = Flask(__name__)
 
 def process_voice_to_json(webhook_data):
     """Convert webhook data to structured JSON"""
@@ -163,46 +157,12 @@ def process_voice_to_json(webhook_data):
 
     return user_preferences
 
-@app.route('/omnidim-callback', methods=['POST'])
-def handle_omnidim_callback():
-    try:
-        print("Received webhook callback!")
-        webhook_data = request.json
-        print(f"Webhook data: {json.dumps(webhook_data, indent=2)}")
-
-        # Process voice input to JSON
-        preferences_json = process_voice_to_json(webhook_data)
-
-        # Save to file
-        filename = f"user_preferences_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        with open(filename, 'w') as f:
-            json.dump(preferences_json, f, indent=2)
-
-        print(f"Preferences saved to {filename}")
-        print("Structured preferences:")
-        print(json.dumps(preferences_json, indent=2))
-
-        return jsonify({"status": "success", "message": "Preferences processed", "filename": filename})
-
-    except Exception as e:
-        print(f"Error processing webhook: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/health', methods=['GET'])
-def health_check():
-    return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat()})
-
-if __name__ == '__main__':
-    print("Starting webhook server on port 5000...")
-    app.run(host='0.0.0.0', port=5000, debug=True)
-
-# Step 3: Call Initiator (make_call.py)
 def initiate_call(agent_id, phone_number):
     """Initiate a call with the created agent"""
     try:
         call_response = client.call.create(
             agent_id=agent_id,
-            phone_number=phone_number,  # Format: "+1234567890"
+            phone_number=phone_number,
             call_type="Outgoing"
         )
 
@@ -214,13 +174,27 @@ def initiate_call(agent_id, phone_number):
         print(f"Error initiating call: {e}")
         return None
 
+# Flask Routes
 @app.route('/')
 def home():
-    return "Flask app is running! Welcome to SaheliSync"
+    return jsonify({
+        "message": "SaheliSync Roommate Matching System",
+        "status": "running",
+        "endpoints": [
+            "/health - Health check",
+            "/routes - List all routes",
+            "/create-agent - Create new agent",
+            "/omnidim-callback - Webhook callback"
+        ]
+    })
 
 @app.route('/health')
 def health():
-    return jsonify({"status": "healthy", "message": "Server is running"})
+    return jsonify({
+        "status": "healthy", 
+        "message": "Server is running",
+        "timestamp": datetime.now().isoformat()
+    })
 
 @app.route('/routes')
 def list_routes():
@@ -233,26 +207,55 @@ def list_routes():
         })
     return jsonify(routes)
 
-# Step 4: Main execution function
-def main():
-    print("=== Roommate Preferences Voice Collection System ===\n")
+@app.route('/create-agent', methods=['POST'])
+def create_agent_endpoint():
+    try:
+        agent_id = create_roommate_agent()
+        if agent_id:
+            return jsonify({
+                "status": "success",
+                "agent_id": agent_id,
+                "message": "Agent created successfully"
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "message": "Failed to create agent"
+            }), 500
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
 
-    # Create agent
-    print("1. Creating agent...")
-    agent_id = create_roommate_agent()
+@app.route('/omnidim-callback', methods=['POST'])
+def handle_omnidim_callback():
+    try:
+        print("Received webhook callback!")
+        webhook_data = request.json
+        print(f"Webhook data: {json.dumps(webhook_data, indent=2)}")
 
-    if not agent_id:
-        print("Failed to create agent. Please check your API key and try again.")
-        return
+        preferences_json = process_voice_to_json(webhook_data)
 
-    print(f"\n2. Agent created with ID: {agent_id}")
-    print("\n3. Next steps:")
-    print("   a. Start the webhook server (run webhook_server.py)")
-    print("   b. Use ngrok to expose your local server: 'ngrok http 5000'")
-    print("   c. Update the webhook URL in the agent creation code")
-    print("   d. Initiate a call using the agent ID")
-    print(f"\n4. To make a call, use:")
-    print(f"   initiate_call('{agent_id}', '+1234567890')")
+        filename = f"user_preferences_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        with open(filename, 'w') as f:
+            json.dump(preferences_json, f, indent=2)
 
-if __name__ == "__main__":
-    main()
+        print(f"Preferences saved to {filename}")
+        print("Structured preferences:")
+        print(json.dumps(preferences_json, indent=2))
+
+        return jsonify({
+            "status": "success", 
+            "message": "Preferences processed", 
+            "filename": filename
+        })
+
+    except Exception as e:
+        print(f"Error processing webhook: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+if __name__ == '__main__':
+    print("https://backend.omnidim.io/api/v1")
+    print("Starting webhook server on port 5000...")
+    app.run(host='0.0.0.0', port=5000, debug=True)

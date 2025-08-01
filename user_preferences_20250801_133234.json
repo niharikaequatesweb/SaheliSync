@@ -1,0 +1,33 @@
+{
+  "user_profile": {
+    "cleanliness": {
+      "rating": "Not specified",
+      "habits": "Not specified"
+    },
+    "sleep_schedule": {
+      "bedtime": "Not specified",
+      "wake_time": "Not specified",
+      "sleep_type": "Not specified"
+    },
+    "social_preferences": {
+      "energy_level": "Not specified",
+      "guests_frequency": "Not specified"
+    },
+    "living_preferences": {
+      "room_type": "Not specified",
+      "privacy_importance": "Not specified"
+    },
+    "lifestyle": {
+      "pets": "Not specified",
+      "substances": "Not specified",
+      "dietary": "Not specified",
+      "noise_tolerance": "Not specified"
+    }
+  },
+  "conversation_metadata": {
+    "sentiment": "Not analyzed",
+    "summary": "Not available",
+    "full_conversation": "Not available",
+    "processed_at": "2025-08-01T13:32:34.828677"
+  }
+}
