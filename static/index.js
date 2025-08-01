@@ -242,3 +242,67 @@ document.addEventListener('DOMContentLoaded', function () {
     initSpeechRecognition();
     setTimeout(() => speak(conversationFlow[0]), 1000);
 });
+
+// Voice recognition setup
+let recognizing = false;
+let recognition;
+
+if ('webkitSpeechRecognition' in window) {
+    recognition = new webkitSpeechRecognition(); // or SpeechRecognition for some browsers
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = function () {
+        recognizing = true;
+        document.getElementById('mic-btn').innerText = "🛑"; // Change icon when recording
+    };
+
+    recognition.onend = function () {
+        recognizing = false;
+        document.getElementById('mic-btn').innerText = "🎤";
+    };
+
+    recognition.onresult = function (event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById("chat-input").value = transcript;
+    };
+} else {
+    alert("Your browser doesn't support speech recognition.");
+}
+
+// Called when mic button is clicked
+function toggleVoiceRecording() {
+    if (recognizing) {
+        recognition.stop();
+        return;
+    }
+    recognition.start();
+}
+
+// Send message function
+function sendMessage() {
+    const input = document.getElementById("chat-input");
+    const message = input.value.trim();
+    if (!message) return;
+
+    const chatMessages = document.getElementById("chat-messages");
+    const userMessage = document.createElement("div");
+    userMessage.classList.add("message", "user");
+    userMessage.innerHTML = `<div class="message-bubble">${message}</div>`;
+    chatMessages.appendChild(userMessage);
+
+    input.value = "";
+
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Here you'd normally send message to server or chatbot API
+    setTimeout(() => {
+        const saheliReply = document.createElement("div");
+        saheliReply.classList.add("message", "saheli");
+        saheliReply.innerHTML = `<div class="message-bubble">Thanks for sharing: "${message}" 😊</div>`;
+        chatMessages.appendChild(saheliReply);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 500);
+}
