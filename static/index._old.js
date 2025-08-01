@@ -18,7 +18,7 @@ const conversationFlow = [
 function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-        alert("Speech recognition not supported in your browser.");
+        console.warn("Speech recognition not supported.");
         return;
     }
 
@@ -30,13 +30,13 @@ function initSpeechRecognition() {
     recognition.onstart = () => {
         isRecording = true;
         document.getElementById('mic-btn').classList.add('recording');
-        showStatus('🎙 Listening...', 'listening');
+        showStatus('Listening...', 'listening');
     };
 
-    recognition.onend = () => {
-        isRecording = false;
-        document.getElementById('mic-btn').classList.remove('recording');
-        hideStatus();
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        addMessage(transcript, 'user');
+        processUserInput(transcript);
     };
 
     recognition.onerror = (event) => {
@@ -44,10 +44,10 @@ function initSpeechRecognition() {
         hideStatus();
     };
 
-    recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        addMessage(transcript, 'user');
-        processUserInput(transcript);
+    recognition.onend = () => {
+        isRecording = false;
+        document.getElementById('mic-btn').classList.remove('recording');
+        hideStatus();
     };
 }
 
@@ -60,7 +60,7 @@ function speak(text) {
     utterance.rate = 0.9;
     utterance.pitch = 1.1;
 
-    utterance.onstart = () => showStatus('🗣 Saheli is speaking...', 'speaking');
+    utterance.onstart = () => showStatus('Saheli is speaking...', 'speaking');
     utterance.onend = hideStatus;
 
     synthesis.speak(utterance);
@@ -74,7 +74,7 @@ function setMode(mode) {
 
 function toggleVoiceRecording() {
     if (!recognition) {
-        alert('Speech recognition not supported in your browser.');
+        alert('Speech recognition not supported in your browser');
         return;
     }
 
@@ -217,7 +217,13 @@ function submitPhoneNumber() {
     if (number) {
         alert("Thank you! We'll notify you when we find a match.");
         console.log('Phone submitted:', number);
-        // You can send this to backend via fetch
+
+        // Example fetch to Flask endpoint:
+        // fetch('/submit-phone', {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify({ phone: number })
+        // });
     }
 }
 
@@ -234,9 +240,69 @@ function startVoiceChat() {
 
 document.addEventListener('DOMContentLoaded', function () {
     initSpeechRecognition();
-    setTimeout(() => {
-        const welcome = conversationFlow[0];
-        addMessage(welcome, 'saheli');
-        speak(welcome);
-    }, 1000);
+    setTimeout(() => speak(conversationFlow[0]), 1000);
 });
+
+// Voice recognition setup
+let recognizing = false;
+let recognition;
+
+if ('webkitSpeechRecognition' in window) {
+    recognition = new webkitSpeechRecognition(); // or SpeechRecognition for some browsers
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = function () {
+        recognizing = true;
+        document.getElementById('mic-btn').innerText = "🛑"; // Change icon when recording
+    };
+
+    recognition.onend = function () {
+        recognizing = false;
+        document.getElementById('mic-btn').innerText = "🎤";
+    };
+
+    recognition.onresult = function (event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById("chat-input").value = transcript;
+    };
+} else {
+    alert("Your browser doesn't support speech recognition.");
+}
+
+// Called when mic button is clicked
+function toggleVoiceRecording() {
+    if (recognizing) {
+        recognition.stop();
+        return;
+    }
+    recognition.start();
+}
+
+// Send message function
+function sendMessage() {
+    const input = document.getElementById("chat-input");
+    const message = input.value.trim();
+    if (!message) return;
+
+    const chatMessages = document.getElementById("chat-messages");
+    const userMessage = document.createElement("div");
+    userMessage.classList.add("message", "user");
+    userMessage.innerHTML = `<div class="message-bubble">${message}</div>`;
+    chatMessages.appendChild(userMessage);
+
+    input.value = "";
+
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Here you'd normally send message to server or chatbot API
+    setTimeout(() => {
+        const saheliReply = document.createElement("div");
+        saheliReply.classList.add("message", "saheli");
+        saheliReply.innerHTML = `<div class="message-bubble">Thanks for sharing: "${message}" 😊</div>`;
+        chatMessages.appendChild(saheliReply);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 500);
+}
