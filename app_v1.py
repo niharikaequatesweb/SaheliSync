@@ -5,7 +5,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-api_key = 'ASyEXtdTuHuc5bhGLlwEmteCM3xQ5xnkavicb5_bCao'
+api_key = 'bb'
 client = Client(api_key)
 
 def create_roommate_agent():
