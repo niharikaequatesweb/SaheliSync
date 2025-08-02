@@ -21,7 +21,7 @@ all_profiles = []
 def inject_widget_config():
     return dict(
         voice_widget_script_id=config.VOICE_WIDGET_SCRIPT_ID,
-        voice_widget_script_src=f"{config.VOICE_WIDGET_SCRIPT_BASE}?secret_key={config.VOICE_WIDGET_SECRET}"
+        voice_widget_script_src=f"{config.VOICE_WIDGET_BASE}?secret_key={config.VOICE_WIDGET_SECRET}"
     )
 
 @app.route('/')
@@ -175,6 +175,10 @@ def match_user(user_id):
     if "error" in result:
         return jsonify(result), 404
 
+    print(f"\n📊 Match Results for User ID {user_id}:")
+    for match in result.get("matches", []):
+        print(f" - Matched User ID: {match['user_id']} | Score: {match['score']:.2f}")
+
     return jsonify(result)
 
 @app.route('/test-matching', methods=['GET'])
@@ -185,6 +189,11 @@ def test_matching():
     target_id = all_profiles[-1].get("call_id")
     matcher = RoommateMatchingModel()
     result = matcher.find_matches(all_profiles, target_id)
+
+    print(f"\n🧪 Test Match for User ID {target_id}:")
+    for match in result.get("matches", []):
+        print(f" - Matched User ID: {match['user_id']} | Score: {match['score']:.2f}")
+
     return jsonify(result)
 
 @app.route('/data-summary', methods=['GET'])
