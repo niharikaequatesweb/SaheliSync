@@ -1,5 +1,4 @@
 import logging
-import sys
 from flask import Flask, request, jsonify, render_template
 from omnidimension import Client
 from datetime import datetime
@@ -8,19 +7,16 @@ import traceback
 from flask_cors import CORS
 from model import RoommateMatchingModel
 import config
-from pprint import pformat
 
-# Setup logging for Render visibility
+# Setup logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)]
 )
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 CORS(app)
-app.logger.propagate = True  # Ensure Flask logs are not suppressed
 
 client = Client(config.OMNIDIM_API_KEY)
 
@@ -123,8 +119,6 @@ def omnidim_callback():
         logger.info(f"✅ Callback received. Total profiles stored: {len(all_profiles)}")
         processed_data = process_profile_data(call_report)
 
-        logger.info("🧾 Processed Profile Data:\n" + pformat(processed_data))
-
         return jsonify({
             "status": "received",
             "stored_in_memory": True,
@@ -190,7 +184,6 @@ def match_user(user_id):
     for match in result.get("matches", []):
         logger.info(f" - Matched User ID: {match['user_id']} | Score: {match['score']:.2f}")
 
-    logger.info("📋 Full Match Results:\n" + pformat(result))
     return jsonify(result)
 
 @app.route('/test-matching', methods=['GET'])
@@ -206,7 +199,6 @@ def test_matching():
     for match in result.get("matches", []):
         logger.info(f" - Matched User ID: {match['user_id']} | Score: {match['score']:.2f}")
 
-    logger.info("📋 Test Match Results:\n" + pformat(result))
     return jsonify(result)
 
 @app.route('/data-summary', methods=['GET'])
