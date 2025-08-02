@@ -14,7 +14,7 @@
         <div class="nav-container">
             <div class="logo">Saheli<span>Sync</span></div>
             <ul class="nav-links">
-                <li><a href="#features">Features</a></li>
+                <li><a href="#top-matches">Matches</a></li>
                 <li><a href="#find-roommates">Find Roommates</a></li>
                 <li><a href="#contact">Contact Agreement</a></li>
                 <li><a href="#privacy-policy">Privacy Policy</a></li>
@@ -52,11 +52,42 @@
         </div>
     </section>
 
-    <!-- FEATURES SECTION -->
-    <section id="features" class="features-section">
+    <!-- TOP 3 MATCHES SECTION -->
+    <section id="top-matches" class="top-matches-section">
         <div class="container">
-            <h2>Our Amazing Features</h2>
-            <div class="features-grid"></div>
+            <h2>Your Top 3 Matches</h2>
+            <div class="matches-grid">
+                <div class="match-card">
+                    <div class="match-avatar">👩</div>
+                    <h3>Anita Sharma</h3>
+                    <p>Match Score: 94%</p>
+                    <ul>
+                        <li>🧹 Cleanliness: 95%</li>
+                        <li>🎵 Music: 93%</li>
+                        <li>🌙 Sleep: 90%</li>
+                    </ul>
+                </div>
+                <div class="match-card">
+                    <div class="match-avatar">👧</div>
+                    <h3>Riya Das</h3>
+                    <p>Match Score: 91%</p>
+                    <ul>
+                        <li>🛋️ Space: 88%</li>
+                        <li>🧹 Cleanliness: 90%</li>
+                        <li>🌙 Sleep: 85%</li>
+                    </ul>
+                </div>
+                <div class="match-card">
+                    <div class="match-avatar">👩‍🦱</div>
+                    <h3>Neha Verma</h3>
+                    <p>Match Score: 89%</p>
+                    <ul>
+                        <li>🎵 Music: 94%</li>
+                        <li>🛋️ Space: 80%</li>
+                        <li>🌙 Sleep: 88%</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -164,11 +195,12 @@
             </div>
         </div>
     </footer>
+<!-- Voice Widget -->
+<script id="{{ voice_widget_script_id }}" async src="{{ voice_widget_script_src }}"></script>
 
-    <!-- VOICE WIDGET -->
-    <script id="omnidimension-web-widget" async src="https://backend.omnidim.io/web_widget.js?secret_key=25940e02ee09953afa98eed2c589e011"></script>
-
-    <!-- MAIN SCRIPT -->
-    <script src="/static/index.js"></script>
+<!-- JS -->
+<script src="{{ url_for('static', filename='index.js') }}"></script>
 </body>
 </html>
+
+
