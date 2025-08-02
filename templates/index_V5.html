@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SaheliSync - AI-Powered Roommate Matching</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/index.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <h1>SaheliSync</h1>
+      <p>AI-powered roommate matcher that listens, understands, and finds your perfect match.</p>
+      <div class="cta-buttons">
+        <button onclick="startVoiceChat()">🎙 Talk to Saheli</button>
+        <button onclick="scrollToChat()">💬 Chat with Saheli</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOP 3 MATCHES -->
+  <section class="matches-section">
+    <div class="container">
+      <h2>Your Top 3 Matches</h2>
+      <div id="top-matches" class="matches-grid"></div>
+    </div>
+  </section>
+
+  <!-- COMPATIBILITY DASHBOARD -->
+  <section class="dashboard-section">
+    <div class="container">
+      <h2>Your Compatibility Dashboard</h2>
+      <canvas id="personalityRadar"></canvas>
+    </div>
+  </section>
+
+  <!-- CHAT INTERFACE -->
+  <section class="chat-section" id="chat-section">
+    <div class="container">
+      <div class="chat-header">
+        <h2>Chat with Saheli</h2>
+        <p>Your AI roommate matching assistant</p>
+      </div>
+      <div id="chat-messages" class="chat-messages">
+        <div class="message saheli">
+          <div class="message-bubble">Hi there! I'm Saheli. What's your name? 😊</div>
+        </div>
+      </div>
+      <div class="chat-input-container">
+        <input id="chat-input" type="text" placeholder="Type your message..." onkeypress="handleKeyPress(event)" />
+        <button onclick="toggleVoiceRecording()">🎤</button>
+        <button onclick="sendMessage()">📩</button>
+      </div>
+    </div>
+  </section>
+
+<!-- Voice Widget -->
+<script id="{{ voice_widget_script_id }}" async src="{{ voice_widget_script_src }}"></script>
+
+<!-- JS -->
+<script src="{{ url_for('static', filename='index.js') }}"></script>
+</body>
+</html>
