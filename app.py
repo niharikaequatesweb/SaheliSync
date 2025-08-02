@@ -271,6 +271,7 @@ def get_profile_stats():
     if latest_profile_data:
         extracted_vars = latest_profile_data.get("extracted_variables", {})
         stats["available_data_points"] = list(extracted_vars.keys())
+        print(extracted_vars)
     
     return jsonify(stats)
 
