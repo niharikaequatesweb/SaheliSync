@@ -17,5 +17,4 @@ requests
 pandas
 numpy
 scikit-learn
-re
 datetime
