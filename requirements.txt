@@ -16,6 +16,6 @@ flask-cors
 requests
 pandas
 numpy
-sklearn
+scikit-learn
 re
 datetime
