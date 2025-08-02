@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SaheliSync - AI-Powered Roommate Matching</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="avatar-container">
+          <div class="sound-wave"></div>
+          <div class="sound-wave"></div>
+          <div class="sound-wave"></div>
+          <div class="avatar">👭</div>
+        </div>
+        <h1>Welcome to SaheliSync 👭</h1>
+        <p>AI-powered roommate matcher that listens, understands, and finds your perfect match</p>
+        <div class="cta-buttons">
+          <button class="btn btn-primary" onclick="startVoiceChat()">🎙 Talk to Saheli</button>
+          <button class="btn btn-secondary" onclick="scrollToChat()">💬 Chat with Saheli</button>
+        </div>
+        <button id="mic-btn" class="btn btn-primary" onclick="toggleVoiceRecording()">🎤 Toggle Mic</button>
+        <div id="status-indicator" class="status-indicator hidden"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Chat Section -->
+  <section class="chat-section" id="chat-section">
+    <div class="container">
+      <div class="chat-container">
+        <div class="chat-header">
+          <h2>Chat with Saheli</h2>
+          <p>Your AI roommate matching assistant</p>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Results Section -->
+  <section class="results-section" id="results-section" style="display: none;">
+    <div class="container">
+      <div class="results-container" id="results-container"></div>
+    </div>
+  </section>
+
+  <!-- Voice Widget Script if needed -->
+  <script id="{{ voice_widget_script_id }}" async src="{{ voice_widget_script_src }}"></script>
+
+  <!-- JS Logic -->
+  <script src="{{ url_for('static', filename='index.js') }}"></script>
+
+</body>
+</html>

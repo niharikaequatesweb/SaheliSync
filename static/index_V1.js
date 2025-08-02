@@ -14,6 +14,7 @@ const conversationFlow = [
     "Perfect! Let me find some matches for you... 🔍"
 ];
 
+// Initialize speech recognition
 function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -50,14 +51,18 @@ function initSpeechRecognition() {
     };
 }
 
+// Text-to-speech
 function speak(text) {
     if (currentMode === 'chat-chat') return;
+
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-IN';
     utterance.rate = 0.9;
     utterance.pitch = 1.1;
+
     utterance.onstart = () => showStatus('🗣 Saheli is speaking...', 'speaking');
     utterance.onend = hideStatus;
+
     synthesis.speak(utterance);
 }
 
@@ -66,6 +71,7 @@ function toggleVoiceRecording() {
         alert('Speech recognition not supported in your browser.');
         return;
     }
+
     isRecording ? recognition.stop() : recognition.start();
 }
 
@@ -106,69 +112,10 @@ function processUserInput(input) {
             speak(finalMessage);
             setTimeout(() => {
                 sendUserDataToBackend(userProfile);
+                showMatchingResults();
             }, 2000);
         }, 1000);
     }
-}
-
-function sendUserDataToBackend(profile) {
-    fetch('/api/save_profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profile)
-    })
-    .then(res => res.json())
-    .then(data => {
-        const userId = data.user_id || data.call_id || 'unknown';
-        showMatchingResults(userId);
-    })
-    .catch(err => {
-        console.error("Failed to send data:", err);
-        alert("Couldn't send your preferences to the server.");
-    });
-}
-
-function showMatchingResults(userId) {
-    fetch(`/match-user/${userId}`)
-        .then(response => {
-            if (!response.ok) throw new Error("Failed to fetch matches");
-            return response.json();
-        })
-        .then(result => {
-            const matches = result.matches || [];
-            const resultsSection = document.getElementById('results-section');
-            const resultsContainer = document.getElementById('results-container');
-
-            if (matches.length === 0) {
-                resultsContainer.innerHTML = `<h2>Sorry, no matches found at the moment.</h2>`;
-            } else {
-                resultsContainer.innerHTML = `
-                    <h2>Great news! We found ${matches.length} perfect match${matches.length > 1 ? 'es' : ''} for you! 🎉</h2>
-                    <div class="match-cards">
-                        ${matches.map((m, i) => `
-                            <div class="match-card" style="animation-delay: ${i * 0.2}s">
-                                <div class="match-avatar">${m.avatar || '👤'}</div>
-                                <h3>${m.name || 'Match Candidate'}</h3>
-                                <p>${m.profession || 'Unknown Profession'}</p>
-                                <p>📍 ${m.city || 'Unknown City'}</p>
-                                <div class="compatibility">${(m.score * 100).toFixed(1)}% Compatible</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            }
-
-            createConfetti();
-            setTimeout(() => {
-                document.querySelectorAll('.match-card').forEach(card => card.classList.add('show'));
-            }, 500);
-            resultsSection.style.display = 'block';
-            resultsSection.scrollIntoView({ behavior: 'smooth' });
-        })
-        .catch(err => {
-            console.error("Error fetching matches:", err);
-            alert("Something went wrong while fetching matches.");
-        });
 }
 
 function showStatus(message, type) {
@@ -193,6 +140,42 @@ function startVoiceChat() {
     }, 1000);
 }
 
+// Show matches (mocked)
+function showMatchingResults() {
+    const resultsSection = document.getElementById('results-section');
+    const resultsContainer = document.getElementById('results-container');
+
+    const matches = [
+        { name: 'Priya Sharma', profession: 'Software Engineer', compatibility: '95%', city: 'Bangalore', avatar: '👩‍💻' },
+        { name: 'Ananya Gupta', profession: 'Marketing Manager', compatibility: '88%', city: 'Mumbai', avatar: '👩‍💼' },
+        { name: 'Kavya Reddy', profession: 'Graphic Designer', compatibility: '82%', city: 'Hyderabad', avatar: '👩‍🎨' }
+    ];
+
+    resultsContainer.innerHTML = `
+        <h2>Great news! We found ${matches.length} perfect matches for you! 🎉</h2>
+        <div class="match-cards">
+            ${matches.map((m, i) => `
+                <div class="match-card" style="animation-delay: ${i * 0.2}s">
+                    <div class="match-avatar">${m.avatar}</div>
+                    <h3>${m.name}</h3>
+                    <p>${m.profession}</p>
+                    <p>📍 ${m.city}</p>
+                    <div class="compatibility">${m.compatibility} Compatible</div>
+                </div>`).join('')}
+        </div>
+    `;
+
+    createConfetti();
+
+    setTimeout(() => {
+        document.querySelectorAll('.match-card').forEach(card => card.classList.add('show'));
+    }, 500);
+
+    resultsSection.style.display = 'block';
+    resultsSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Optional confetti
 function createConfetti() {
     const confettiContainer = document.createElement('div');
     confettiContainer.className = 'confetti';
@@ -209,6 +192,18 @@ function createConfetti() {
     }
 
     setTimeout(() => document.body.removeChild(confettiContainer), 3000);
+}
+
+// 📤 POST user profile to backend
+function sendUserDataToBackend(profile) {
+    fetch('/api/save_profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile)
+    })
+    .then(res => res.json())
+    .then(data => console.log("Server response:", data))
+    .catch(err => console.error("Failed to send data:", err));
 }
 
 document.addEventListener('DOMContentLoaded', function () {

@@ -2,11 +2,13 @@ import logging
 from flask import Flask, request, jsonify, render_template
 from omnidimension import Client
 from datetime import datetime
+import json
 import os
 import traceback
+import requests
+import config
 from flask_cors import CORS
 from model import RoommateMatchingModel
-import config
 
 # Setup logging
 logging.basicConfig(
