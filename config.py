@@ -2,8 +2,8 @@
 
 import os
 
-OMNIDIM_API_KEY = os.getenv("OMNIDIM_API_KEY", "ubJHHRcQy__yuWiTuUDJkr8IAlJB9TqYwqNyQLUb2-M")
-VOICE_WIDGET_SECRET = os.getenv("VOICE_WIDGET_SECRET", "25940e02ee09953afa98eed2c589e011")
+OMNIDIM_API_KEY = os.getenv("OMNIDIM_API_KEY", "3lHlSmFvo-qH66ZSEOsV4_ggAYhIlB1qQ4zh3EPFMSE")
+VOICE_WIDGET_SECRET = os.getenv("VOICE_WIDGET_SECRET", "99a0f197aa77b8aad9ca8f9a237efe4e")
 
 # For the <script> tag
 VOICE_WIDGET_SCRIPT_ID = "omnidimension-web-widget"
