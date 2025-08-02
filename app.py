@@ -220,75 +220,6 @@ def process_profile_data(call_report):
         return None
 
 
-def upload_to_pastegg(data):
-    try:
-        paste_data = {
-            "name": "sahelisync-callback.json",
-            "files": [
-                {
-                    "name": "roommate_preferences.json",
-                    "content": {
-                        "format": "text",
-                        "value": json.dumps(data, indent=2)
-                    }
-                }
-            ],
-            "visibility": "public"
-        }
-
-        response = requests.post("https://api.paste.gg/v1/pastes", json=paste_data, timeout=10)
-
-        if response.status_code == 201:
-            paste_id = response.json()["result"]["id"]
-            paste_url = f"https://paste.gg/p/{paste_id}"
-            print(f"[Uploaded to Paste.gg]: {paste_url}")
-            return paste_url
-        else:
-            print(f"[Paste.gg upload failed]: {response.status_code}")
-            print("[Data stored in memory successfully - paste.gg backup failed but functionality intact]")
-            return None
-    except Exception as e:
-        print(f"[Paste.gg upload error]: {e}")
-        print("[Data stored in memory successfully - paste.gg backup failed but functionality intact]")
-        return None
-
-
-@app.route('/latest-profile', methods=['GET'])
-def get_latest_profile():
-    if latest_profile_data:
-        return jsonify(latest_profile_data)
-    else:
-        return jsonify({"error": "No profile data found"}), 404
-
-
-@app.route('/all-profiles', methods=['GET'])
-def get_all_profiles():
-    """Get all stored profiles"""
-    return jsonify({
-        "total": len(all_profiles),
-        "profiles": all_profiles
-    })
-
-
-@app.route('/processed-profile', methods=['GET'])
-def get_processed_profile():
-    """Get the latest processed profile data"""
-    if latest_profile_data:
-        processed = process_profile_data(latest_profile_data)
-        return jsonify(processed)
-    else:
-        return jsonify({"error": "No profile data found"}), 404
-
-
-@app.route('/clear-profiles', methods=['POST'])
-def clear_profiles():
-    """Clear all stored profile data"""
-    global latest_profile_data, all_profiles
-    latest_profile_data = None
-    all_profiles = []
-    return jsonify({"status": "cleared", "message": "All profile data cleared from memory"})
-
-
 @app.route('/latest-profile', methods=['GET'])
 def get_latest_profile():
     if latest_profile_data:
@@ -342,37 +273,9 @@ def get_profile_stats():
     if latest_profile_data:
         extracted_vars = latest_profile_data.get("extracted_variables", {})
         stats["available_data_points"] = list(extracted_vars.keys())
+        print(extracted_vars)
     
     return jsonify(stats)
-
-
-@app.route('/download-paste', methods=['GET'])
-def download_paste():
-    paste_url = request.args.get("url")
-    if not paste_url:
-        return jsonify({"error": "Missing 'url' parameter"}), 400
-
-    try:
-        paste_id = paste_url.rstrip("/").split("/")[-1]
-        api_url = f"https://api.paste.gg/v1/pastes/{paste_id}"
-        response = requests.get(api_url)
-
-        if response.status_code != 200:
-            return jsonify({"error": f"Failed to fetch paste.gg content: {response.status_code}"}), 500
-
-        file_content = response.json()["result"]["files"][0]["content"]["value"]
-        
-        # Store in memory instead of file
-        global latest_profile_data
-        latest_profile_data = json.loads(file_content)
-        
-        return jsonify({
-            "status": "success", 
-            "message": "Data loaded into memory",
-            "data": latest_profile_data
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/analyze-profiles', methods=['GET'])
