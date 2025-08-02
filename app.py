@@ -21,7 +21,7 @@ all_profiles = []
 def inject_widget_config():
     return dict(
         voice_widget_script_id=config.VOICE_WIDGET_SCRIPT_ID,
-        voice_widget_script_src=f"{config.VOICE_WIDGET_BASE}?secret_key={config.VOICE_WIDGET_SECRET}"
+        voice_widget_script_src=f"{config.VOICE_WIDGET_SCRIPT_BASE }?secret_key={config.VOICE_WIDGET_SECRET}"
     )
 
 @app.route('/')
