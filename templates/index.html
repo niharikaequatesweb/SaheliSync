@@ -1,200 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaheliSync - AI-Powered Roommate Matching</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/index.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SaheliSync - AI-Powered Roommate Matching</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/index.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <!-- NAVIGATION BAR -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="logo">Saheli<span>Sync</span></div>
-            <ul class="nav-links">
-                <li><a href="#top-matches">Matches</a></li>
-                <li><a href="#find-roommates">Find Roommates</a></li>
-                <li><a href="#contact">Contact Agreement</a></li>
-                <li><a href="#privacy-policy">Privacy Policy</a></li>
-            </ul>
-            <div class="nav-buttons">
-                <button class="btn btn-login">Login/Sign Up</button>
-            </div>
-            <div class="menu-toggle">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-            </div>
-        </div>
-    </nav>
 
-    <!-- HERO SECTION -->
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <div class="avatar-container">
-                    <div class="sound-wave"></div>
-                    <div class="sound-wave"></div>
-                    <div class="sound-wave"></div>
-                    <div class="avatar">👭</div>
-                </div>
-                <h1>Welcome to SaheliSync 👭</h1>
-                <p>AI-powered roommate matcher that listens, understands, and finds your perfect match</p>
-                <div class="cta-buttons">
-                    <button class="btn btn-primary" onclick="startVoiceChat()">🎙 Talk to Saheli</button>
-                    <button class="btn btn-secondary" onclick="scrollToChat()">💬 Chat with Saheli</button>
-                </div>
-            </div>
-        </div>
-    </section>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <h1>SaheliSync</h1>
+      <p>AI-powered roommate matcher that listens, understands, and finds your perfect match.</p>
+      <div class="cta-buttons">
+        <button onclick="startVoiceChat()">🎙 Talk to Saheli</button>
+        <button onclick="scrollToChat()">💬 Chat with Saheli</button>
+      </div>
+    </div>
+  </section>
 
-    <!-- TOP 3 MATCHES SECTION -->
-    <section id="top-matches" class="top-matches-section">
-        <div class="container">
-            <h2>Your Top 3 Matches</h2>
-            <div class="matches-grid">
-                <div class="match-card">
-                    <div class="match-avatar">👩</div>
-                    <h3>Anita Sharma</h3>
-                    <p>Match Score: 94%</p>
-                    <ul>
-                        <li>🧹 Cleanliness: 95%</li>
-                        <li>🎵 Music: 93%</li>
-                        <li>🌙 Sleep: 90%</li>
-                    </ul>
-                </div>
-                <div class="match-card">
-                    <div class="match-avatar">👧</div>
-                    <h3>Riya Das</h3>
-                    <p>Match Score: 91%</p>
-                    <ul>
-                        <li>🛋️ Space: 88%</li>
-                        <li>🧹 Cleanliness: 90%</li>
-                        <li>🌙 Sleep: 85%</li>
-                    </ul>
-                </div>
-                <div class="match-card">
-                    <div class="match-avatar">👩‍🦱</div>
-                    <h3>Neha Verma</h3>
-                    <p>Match Score: 89%</p>
-                    <ul>
-                        <li>🎵 Music: 94%</li>
-                        <li>🛋️ Space: 80%</li>
-                        <li>🌙 Sleep: 88%</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
+  <!-- TOP 3 MATCHES -->
+  <section class="matches-section">
+    <div class="container">
+      <h2>Your Top 3 Matches</h2>
+      <div id="top-matches" class="matches-grid"></div>
+    </div>
+  </section>
 
-    <!-- COMPATIBILITY DASHBOARD -->
-    <section class="dashboard-section">
-        <div class="container">
-            <h2>Your Compatibility Dashboard</h2>
-            <div class="compatibility-dashboard">
-                <div class="radar-container">
-                    <canvas id="personalityRadar"></canvas>
-                </div>
-                <div class="match-breakdown">
-                    <h3>Compatibility Insights</h3>
-                    <ul class="match-reasons">
-                        <li class="match-item"><div class="metric-bar" style="--score: 92%"></div><span>🌙 Sleep Patterns: 92% Match</span></li>
-                        <li class="match-item"><div class="metric-bar" style="--score: 88%"></div><span>🧹 Cleanliness: 88% Match</span></li>
-                        <li class="match-item"><div class="metric-bar" style="--score: 95%"></div><span>🎵 Music Taste: 95% Match</span></li>
-                        <li class="match-item"><div class="metric-bar" style="--score: 76%"></div><span>🛋️ Space Usage: 76% Match</span></li>
-                    </ul>
-                    <div class="chemistry-meter">
-                        <div class="chemistry-fill" style="--chemistry: 85%">
-                            <span>Roommate Chemistry: 85%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+  <!-- COMPATIBILITY DASHBOARD -->
+  <section class="dashboard-section">
+    <div class="container">
+      <h2>Your Compatibility Dashboard</h2>
+      <canvas id="personalityRadar"></canvas>
+    </div>
+  </section>
 
-    <!-- CHAT INTERFACE -->
-    <section class="chat-section" id="chat-section">
-        <div class="container">
-            <div class="chat-container">
-                <div class="chat-header">
-                    <h2>Chat with Saheli</h2>
-                    <p>Your AI roommate matching assistant</p>
-                </div>
-                <div class="mode-toggles">
-                    <button class="toggle-btn active" onclick="setMode('voice-chat')" id="voice-chat-btn">🎙 Voice ↔ Chat</button>
-                    <button class="toggle-btn" onclick="setMode('voice-voice')" id="voice-voice-btn">🗣 Voice ↔ Voice</button>
-                    <button class="toggle-btn" onclick="setMode('chat-chat')" id="chat-chat-btn">💬 Chat ↔ Chat</button>
-                </div>
-                <div class="status-indicator hidden" id="status-indicator"></div>
-                <div class="chat-messages" id="chat-messages">
-                    <div class="message saheli">
-                        <div class="message-bubble">
-                            Hi there! I'm Saheli, your AI roommate matching assistant. I'm here to help you find the perfect roommate. What's your name? 😊
-                        </div>
-                    </div>
-                </div>
-                <div class="chat-input-container">
-                    <input type="text" class="chat-input" id="chat-input" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
-                    <button class="mic-btn" id="mic-btn" onclick="toggleVoiceRecording()">🎤</button>
-                    <button class="send-btn" onclick="sendMessage()">📩</button>
-                </div>
-            </div>
+  <!-- CHAT INTERFACE -->
+  <section class="chat-section" id="chat-section">
+    <div class="container">
+      <div class="chat-header">
+        <h2>Chat with Saheli</h2>
+        <p>Your AI roommate matching assistant</p>
+      </div>
+      <div id="chat-messages" class="chat-messages">
+        <div class="message saheli">
+          <div class="message-bubble">Hi there! I'm Saheli. What's your name? 😊</div>
         </div>
-    </section>
+      </div>
+      <div class="chat-input-container">
+        <input id="chat-input" type="text" placeholder="Type your message..." onkeypress="handleKeyPress(event)" />
+        <button onclick="toggleVoiceRecording()">🎤</button>
+        <button onclick="sendMessage()">📩</button>
+      </div>
+    </div>
+  </section>
 
-    <!-- RESULTS -->
-    <section class="results-section" id="results-section" style="display: none;">
-        <div class="container">
-            <div class="results-container" id="results-container"></div>
-        </div>
-    </section>
-
-    <!-- CONTACT & AGREEMENT -->
-    <section class="contact-agreement" id="contact">
-        <div class="container">
-            <h2>Contact Agreement</h2>
-            <div class="agreement-container">
-                <div class="agreement-content">
-                    <p>By using SaheliSync, you agree to our privacy policy and terms of service.</p>
-                    <div class="agreement-checkbox">
-                        <input type="checkbox" id="agree-terms">
-                        <label for="agree-terms">I agree to the <a href="#privacy-policy">Privacy Policy</a> and <a href="#terms">Terms of Service</a></label>
-                    </div>
-                    <div class="contact-form">
-                        <h3>Contact Us</h3>
-                        <input type="text" placeholder="Your Name" id="contact-name">
-                        <input type="email" placeholder="Your Email" id="contact-email">
-                        <textarea placeholder="Your Message" id="contact-message"></textarea>
-                        <button class="btn btn-primary" id="submit-contact">Send Message</button>
-                    </div>
-                </div>
-                <div class="agreement-details">
-                    <div class="privacy-policy" id="privacy-policy">
-                        <h3>Privacy Policy</h3>
-                        <p>We collect only necessary information to provide our matching services. Your data is never shared with third parties without consent.</p>
-                    </div>
-                    <div class="terms-service" id="terms">
-                        <h3>Terms of Service</h3>
-                        <p>By using our service, you agree to use it responsibly and respect other users' privacy. Misuse may result in account termination.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- FOOTER -->
-    <footer class="footer-section">
-        <div class="container">
-            <div class="footer-content">
-                <p>© 2023 SaheliSync. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
 <!-- Voice Widget -->
 <script id="{{ voice_widget_script_id }}" async src="{{ voice_widget_script_src }}"></script>
 
@@ -202,5 +65,3 @@
 <script src="{{ url_for('static', filename='index.js') }}"></script>
 </body>
 </html>
-
-
