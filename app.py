@@ -13,6 +13,10 @@ CORS(app)
 
 client = Client(config.OMNIDIM_API_KEY)
 
+# Global variable to store the latest callback data
+latest_profile_data = None
+all_profiles = []  # Store multiple profiles if needed
+
 
 @app.context_processor
 def inject_widget_config():
@@ -103,28 +107,84 @@ def initiate_call():
 
 @app.route('/omnidim-callback', methods=['POST'])
 def omnidim_callback():
+    global latest_profile_data, all_profiles
+    
     try:
         data = request.get_json(force=True)
         print("[Callback received]", json.dumps(data, indent=2))
 
         call_report = data.get("call_report", {})
-        filepath = "/tmp/data.json"
+        
+        # Store in global variables instead of files
+        latest_profile_data = call_report
+        
+        # Add timestamp for tracking
+        call_report['timestamp'] = datetime.now().isoformat()
+        all_profiles.append(call_report)
+        
+        print(f"[Stored callback data in memory] Total profiles: {len(all_profiles)}")
 
-        with open(filepath, "w") as f:
-            json.dump(call_report, f, indent=2)
-
-        print(f"[Saved callback data to]: {filepath}")
-
+        # Still upload to paste.gg for backup/sharing
         paste_url = upload_to_pastegg(call_report)
+
+        # Process the data immediately
+        processed_data = process_profile_data(call_report)
 
         return jsonify({
             "status": "received",
-            "file": "data.json",
-            "paste_url": paste_url
+            "stored_in_memory": True,
+            "paste_url": paste_url,
+            "processed_data": processed_data
         })
     except Exception as e:
         traceback.print_exc()
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+def process_profile_data(call_report):
+    """Process the profile data and extract useful information"""
+    try:
+        extracted_vars = call_report.get("extracted_variables", {})
+        summary = call_report.get("summary", "")
+        
+        # Create a structured profile
+        profile = {
+            "user_id": call_report.get("call_id", "unknown"),
+            "preferences": {
+                "cleanliness": {
+                    "rating": extracted_vars.get("cleanliness_rating"),
+                    "habits": extracted_vars.get("cleanliness_habits")
+                },
+                "sleep": {
+                    "bedtime": extracted_vars.get("bedtime"),
+                    "wake_time": extracted_vars.get("wake_time"),
+                    "sleep_type": extracted_vars.get("sleep_type")
+                },
+                "social": {
+                    "energy_rating": extracted_vars.get("social_energy"),
+                    "guests_preference": extracted_vars.get("guests_preference")
+                },
+                "living": {
+                    "room_preference": extracted_vars.get("room_preference"),
+                    "privacy_importance": extracted_vars.get("privacy_importance")
+                },
+                "lifestyle": {
+                    "pets": extracted_vars.get("pets"),
+                    "substances": extracted_vars.get("substances"),
+                    "dietary": extracted_vars.get("dietary"),
+                    "noise_tolerance": extracted_vars.get("noise_tolerance")
+                }
+            },
+            "summary": summary,
+            "sentiment": call_report.get("sentiment"),
+            "timestamp": call_report.get("timestamp")
+        }
+        
+        return profile
+        
+    except Exception as e:
+        print(f"[Error processing profile data]: {e}")
+        return None
 
 
 def upload_to_pastegg(data):
@@ -160,13 +220,59 @@ def upload_to_pastegg(data):
 
 @app.route('/latest-profile', methods=['GET'])
 def get_latest_profile():
-    filepath = "/tmp/data.json"
-    if os.path.exists(filepath):
-        with open(filepath, "r") as f:
-            data = json.load(f)
-        return jsonify(data)
+    if latest_profile_data:
+        return jsonify(latest_profile_data)
     else:
         return jsonify({"error": "No profile data found"}), 404
+
+
+@app.route('/all-profiles', methods=['GET'])
+def get_all_profiles():
+    """Get all stored profiles"""
+    return jsonify({
+        "total": len(all_profiles),
+        "profiles": all_profiles
+    })
+
+
+@app.route('/processed-profile', methods=['GET'])
+def get_processed_profile():
+    """Get the latest processed profile data"""
+    if latest_profile_data:
+        processed = process_profile_data(latest_profile_data)
+        return jsonify(processed)
+    else:
+        return jsonify({"error": "No profile data found"}), 404
+
+
+@app.route('/clear-profiles', methods=['POST'])
+def clear_profiles():
+    """Clear all stored profile data"""
+    global latest_profile_data, all_profiles
+    latest_profile_data = None
+    all_profiles = []
+    return jsonify({"status": "cleared", "message": "All profile data cleared from memory"})
+
+
+@app.route('/profile-stats', methods=['GET'])
+def get_profile_stats():
+    """Get statistics about stored profiles"""
+    if not all_profiles:
+        return jsonify({"error": "No profiles found"}), 404
+    
+    stats = {
+        "total_profiles": len(all_profiles),
+        "latest_timestamp": all_profiles[-1].get("timestamp") if all_profiles else None,
+        "oldest_timestamp": all_profiles[0].get("timestamp") if all_profiles else None,
+        "available_data_points": []
+    }
+    
+    # Analyze what data points are available
+    if latest_profile_data:
+        extracted_vars = latest_profile_data.get("extracted_variables", {})
+        stats["available_data_points"] = list(extracted_vars.keys())
+    
+    return jsonify(stats)
 
 
 @app.route('/download-paste', methods=['GET'])
@@ -184,11 +290,16 @@ def download_paste():
             return jsonify({"error": f"Failed to fetch paste.gg content: {response.status_code}"}), 500
 
         file_content = response.json()["result"]["files"][0]["content"]["value"]
-        filepath = "/tmp/paste_copy.json"
-        with open(filepath, "w") as f:
-            f.write(file_content)
-
-        return jsonify({"status": "success", "file": filepath})
+        
+        # Store in memory instead of file
+        global latest_profile_data
+        latest_profile_data = json.loads(file_content)
+        
+        return jsonify({
+            "status": "success", 
+            "message": "Data loaded into memory",
+            "data": latest_profile_data
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
