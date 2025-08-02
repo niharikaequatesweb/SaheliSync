@@ -13,3 +13,9 @@ flask
 gunicorn
 omnidimension
 flask-cors
+requests
+pandas
+numpy
+sklearn
+re
+datetime
