@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
-from scikit-learn.preprocessing import LabelEncoder, MinMaxScaler
-from scikit-learn.neighbors import NearestNeighbors
-from scikit-learn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import LabelEncoder, MinMaxScaler
+from sklearn.neighbors import NearestNeighbors
+from sklearn.metrics.pairwise import cosine_similarity
 import re
 from datetime import datetime
 
