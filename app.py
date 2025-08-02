@@ -111,9 +111,39 @@ def omnidim_callback():
     
     try:
         data = request.get_json(force=True)
-        print("[Callback received]", json.dumps(data, indent=2))
+        print("="*50)
+        print("[OMNIDIM CALLBACK RECEIVED]")
+        print("="*50)
+        print(json.dumps(data, indent=2))
+        print("="*50)
 
         call_report = data.get("call_report", {})
+        
+        # Print specific sections for better readability
+        print("\n📞 CALL REPORT SUMMARY:")
+        print("-" * 30)
+        if 'summary' in call_report:
+            print(f"Summary: {call_report['summary']}")
+        if 'sentiment' in call_report:
+            print(f"Sentiment: {call_report['sentiment']}")
+        if 'call_id' in call_report:
+            print(f"Call ID: {call_report['call_id']}")
+        
+        print("\n🔍 EXTRACTED VARIABLES:")
+        print("-" * 30)
+        extracted_vars = call_report.get("extracted_variables", {})
+        for key, value in extracted_vars.items():
+            print(f"{key}: {value}")
+        
+        print("\n💬 FULL CONVERSATION:")
+        print("-" * 30)
+        if 'fullConversation' in call_report:
+            conversation = call_report['fullConversation']
+            if isinstance(conversation, list):
+                for i, turn in enumerate(conversation):
+                    print(f"Turn {i+1}: {turn}")
+            else:
+                print(conversation)
         
         # Store in global variables instead of files
         latest_profile_data = call_report
@@ -122,21 +152,24 @@ def omnidim_callback():
         call_report['timestamp'] = datetime.now().isoformat()
         all_profiles.append(call_report)
         
-        print(f"[Stored callback data in memory] Total profiles: {len(all_profiles)}")
-
-        # Still upload to paste.gg for backup/sharing
-        paste_url = upload_to_pastegg(call_report)
+        print(f"\n✅ [Stored callback data in memory] Total profiles: {len(all_profiles)}")
 
         # Process the data immediately
         processed_data = process_profile_data(call_report)
+        
+        print("\n🏠 PROCESSED PROFILE DATA:")
+        print("-" * 30)
+        print(json.dumps(processed_data, indent=2))
+        print("="*50)
 
         return jsonify({
             "status": "received",
             "stored_in_memory": True,
-            "paste_url": paste_url,
+            "total_profiles": len(all_profiles),
             "processed_data": processed_data
         })
     except Exception as e:
+        print(f"\n❌ ERROR in omnidim_callback: {str(e)}")
         traceback.print_exc()
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -203,7 +236,7 @@ def upload_to_pastegg(data):
             "visibility": "public"
         }
 
-        response = requests.post("https://api.paste.gg/v1/pastes", json=paste_data)
+        response = requests.post("https://api.paste.gg/v1/pastes", json=paste_data, timeout=10)
 
         if response.status_code == 201:
             paste_id = response.json()["result"]["id"]
@@ -211,11 +244,49 @@ def upload_to_pastegg(data):
             print(f"[Uploaded to Paste.gg]: {paste_url}")
             return paste_url
         else:
-            print(f"[Paste.gg upload failed]: {response.status_code} - {response.text}")
+            print(f"[Paste.gg upload failed]: {response.status_code}")
+            print("[Data stored in memory successfully - paste.gg backup failed but functionality intact]")
             return None
     except Exception as e:
         print(f"[Paste.gg upload error]: {e}")
+        print("[Data stored in memory successfully - paste.gg backup failed but functionality intact]")
         return None
+
+
+@app.route('/latest-profile', methods=['GET'])
+def get_latest_profile():
+    if latest_profile_data:
+        return jsonify(latest_profile_data)
+    else:
+        return jsonify({"error": "No profile data found"}), 404
+
+
+@app.route('/all-profiles', methods=['GET'])
+def get_all_profiles():
+    """Get all stored profiles"""
+    return jsonify({
+        "total": len(all_profiles),
+        "profiles": all_profiles
+    })
+
+
+@app.route('/processed-profile', methods=['GET'])
+def get_processed_profile():
+    """Get the latest processed profile data"""
+    if latest_profile_data:
+        processed = process_profile_data(latest_profile_data)
+        return jsonify(processed)
+    else:
+        return jsonify({"error": "No profile data found"}), 404
+
+
+@app.route('/clear-profiles', methods=['POST'])
+def clear_profiles():
+    """Clear all stored profile data"""
+    global latest_profile_data, all_profiles
+    latest_profile_data = None
+    all_profiles = []
+    return jsonify({"status": "cleared", "message": "All profile data cleared from memory"})
 
 
 @app.route('/latest-profile', methods=['GET'])
@@ -271,7 +342,6 @@ def get_profile_stats():
     if latest_profile_data:
         extracted_vars = latest_profile_data.get("extracted_variables", {})
         stats["available_data_points"] = list(extracted_vars.keys())
-        print(extracted_vars)
     
     return jsonify(stats)
 
@@ -303,6 +373,82 @@ def download_paste():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/analyze-profiles', methods=['GET'])
+def analyze_profiles():
+    """Analyze all stored profiles and provide insights"""
+    if not all_profiles:
+        return jsonify({"error": "No profiles found"}), 404
+    
+    analysis = {
+        "total_profiles": len(all_profiles),
+        "analysis": {
+            "cleanliness_ratings": [],
+            "sleep_patterns": [],
+            "social_preferences": [],
+            "lifestyle_factors": []
+        },
+        "compatibility_matrix": []
+    }
+    
+    # Extract data for analysis
+    for profile in all_profiles:
+        extracted_vars = profile.get("extracted_variables", {})
+        
+        # Cleanliness analysis
+        if extracted_vars.get("cleanliness_rating"):
+            analysis["analysis"]["cleanliness_ratings"].append({
+                "profile_id": profile.get("call_id", "unknown"),
+                "rating": extracted_vars.get("cleanliness_rating"),
+                "habits": extracted_vars.get("cleanliness_habits")
+            })
+        
+        # Sleep pattern analysis
+        analysis["analysis"]["sleep_patterns"].append({
+            "profile_id": profile.get("call_id", "unknown"),
+            "bedtime": extracted_vars.get("bedtime"),
+            "wake_time": extracted_vars.get("wake_time"),
+            "sleep_type": extracted_vars.get("sleep_type")
+        })
+        
+        # Social preferences
+        analysis["analysis"]["social_preferences"].append({
+            "profile_id": profile.get("call_id", "unknown"),
+            "social_energy": extracted_vars.get("social_energy"),
+            "guests_preference": extracted_vars.get("guests_preference")
+        })
+        
+        # Lifestyle factors
+        analysis["analysis"]["lifestyle_factors"].append({
+            "profile_id": profile.get("call_id", "unknown"),
+            "pets": extracted_vars.get("pets"),
+            "substances": extracted_vars.get("substances"),
+            "dietary": extracted_vars.get("dietary"),
+            "noise_tolerance": extracted_vars.get("noise_tolerance")
+        })
+    
+    return jsonify(analysis)
+
+
+@app.route('/data-summary', methods=['GET'])
+def get_data_summary():
+    """Get a quick summary of the current data state"""
+    return jsonify({
+        "memory_status": "active",
+        "latest_profile_available": latest_profile_data is not None,
+        "total_profiles_stored": len(all_profiles),
+        "last_update": all_profiles[-1].get("timestamp") if all_profiles else None,
+        "available_endpoints": [
+            "/latest-profile",
+            "/all-profiles", 
+            "/processed-profile",
+            "/analyze-profiles",
+            "/profile-stats",
+            "/clear-profiles",
+            "/data-summary"
+        ]
+    })
 
 
 if __name__ == '__main__':
